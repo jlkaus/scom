@@ -3,6 +3,7 @@
 #include <sys/stat.h>  /* system stat stuff */
 #include <sys/ioctl.h> /* system ioctls */
 #include <stdlib.h>  /* standard library stuff */
+#include <stdint.h>
 #include <string.h>  /* String function definitions */
 #include <unistd.h>  /* UNIX standard function definitions */
 #include <fcntl.h>   /* File control definitions */
@@ -10,9 +11,12 @@
 #include <termios.h> /* POSIX terminal control definitions */
 #include <argp.h>    /* arg_parse and co. */
 
-const char *argp_program_version = PKGNAME " " VERSION;
-const char *argp_program_bug_address = PKGMAINT";
-static char program_documentation[] = PKGNAME " - A very simple interface to communicate over serial lines.\
+#define xstr(s) str(s)
+#define str(s) #s
+
+const char *argp_program_version = xstr(PKGNAME) " " xstr(VERSION);
+const char *argp_program_bug_address = xstr(PKGMAINT);
+static char program_documentation[] = xstr(PKGNAME) " - A very simple interface to communicate over serial lines.\
 \vOnce started, commands are excepted at the terminal with a CMD: prompt.  Data read from the serial port \
 is displayed in READ: lines, and data sent over the serial port is displayed in WRITE: lines.  Supported commands are:\n\
 \txxxxxxxx...\t\tSend hex bytes\n\
@@ -197,7 +201,7 @@ char waitForCommand(char **buffer) {
 }
 
 // Send the specified string over the wire and display a WRITE: line.
-void sendBytes(char *data, size_t size) {
+void sendBytes(uint8_t *data, size_t size) {
   size_t i=0;
 
   if(write(outpfd, data, size) != size) {
@@ -207,7 +211,7 @@ void sendBytes(char *data, size_t size) {
 
   fprintf(stdout, "WRITE: ");
   for(i=0;i<size;++i) {
-    fprintf(stdout, "%02X", (unsigned char)data[i]);
+    fprintf(stdout, "%02hhX", data[i]);
   }
   fprintf(stdout, "\n");
 
@@ -223,7 +227,7 @@ void sendBytes(char *data, size_t size) {
 void sendHexString(char *hexstring) {
   size_t i =0;
   size_t size = strlen(hexstring)/2;
-  unsigned char *dataToSend = malloc(size);
+  uint8_t *dataToSend = malloc(size);
 
   char temp[3];
   temp[2] = 0;
@@ -246,7 +250,7 @@ void sendFile(char *filename) {
     fprintf(stdout,"WRITE: ");
 
     size_t count = 0;
-    unsigned char * byte = 0;
+    uint8_t byte = 0;
     while(read(infd, &byte, 1) > 0) {
 
       if(write(outpfd, &byte, 1) != 1) {
@@ -270,7 +274,7 @@ void sendFile(char *filename) {
     close(infd);
     infd = -1;
 
-    fprintf(stdout, " (%z)\n", count);
+    fprintf(stdout, " (%zu)\n", count);
   } else {
     fprintf(stderr,"ERROR: No such file %s\n", filename);
   }
@@ -284,7 +288,7 @@ void recvHexString() {
   ioctl(outpfd, FIONREAD, &count);
 
   if(count) {
-    unsigned char *buffer = malloc(count);
+    uint8_t *buffer = malloc(count);
 
     read(outpfd, buffer, count);
 
@@ -308,9 +312,9 @@ void recvHexString() {
 	  buffer[i] = '.';
 	}
       }
-      fprintf(stdout,"  [%.*s]",count, buffer);
+      fprintf(stdout,"  [%.*s]",(int)count, buffer);
     } else {
-      fprintf(stdout, "... (%z)  [%.*s]...", count, 4, buffer);
+      fprintf(stdout, "... (%zu)  [%.*s]...", count, 4, buffer);
     }
 
     fprintf(stdout,"\n");
@@ -367,7 +371,7 @@ void hexModeLoop() {
     } else if(cmd == '<') {
       setEchoFile(commanddata+1);
     } else if(cmd == '\'') {
-      sendBytes(commanddata+1, strlen(commanddata+1));
+      sendBytes((uint8_t*)(commanddata+1), strlen(commanddata+1));
     } else if(cmd == ':') {
       sendFile(commanddata+1);
     } else {

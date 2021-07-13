@@ -1,5 +1,5 @@
 PKGNAME = scom
-PKGMAINT = "<jlkaus@gmail.com>"
+PKGMAINT = <jlkaus@gmail.com>
 
 ifndef ROOTDIR
 ROOTDIR := $(CURDIR)
@@ -47,6 +47,7 @@ mandir = $(datarootdir)/man
 
 
 $(warning PKGNAME=$(PKGNAME))
+$(warning PKGMAINT=$(PKGMAINT))
 $(warning VERSION=$(VERSION))
 $(warning TARGET_ARCH_TYPE=$(TARGET_ARCH_TYPE))
 
