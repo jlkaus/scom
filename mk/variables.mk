@@ -15,15 +15,15 @@ VERSION := $(shell cat $(ROOTDIR)/VERSION)
 export VERSION
 endif
 
-TAR = /usr/bin/tar
-MKDIR = /usr/bin/mkdir
+TAR = /bin/tar
+MKDIR = /bin/mkdir
 INSTALL = /usr/bin/install
 WGET=/usr/bin/wget
 WGET_OPT= --quiet --compression=auto
 CONVERT=/usr/bin/convert
 FIND=/usr/bin/find
-CP=/usr/bin/cp
-CHMOD=/usr/bin/chmod
+CP=/bin/cp
+CHMOD=/bin/chmod
 CC = /usr/bin/gcc
 CXX = /usr/bin/g++
 
