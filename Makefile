@@ -1,29 +1,70 @@
+ifndef ROOTDIR
+ROOTDIR := $(CURDIR)
+export ROOTDIR
+endif
 
-CC = gcc
-CXX = g++
-CXXFLAGS = -D__STDC_LIMIT_MACROS
-CFLAGS = 
-LDFLAGS = -rdynamic
-LDLIBS = -lpthread
+include $(ROOTDIR)/mk/variables.mk
+
+INSTALLDIR := $(ROOTDIR)/gen/install
 
 .PHONY: all
-all: scom
+all: exec
 
-# Actual targets
-scom: scom.o
-	$(CC) $(LDFLAGS) -o $@ $< $(LDLIBS)
+.PHONY: exec
+exec:
+	$(MAKE) -C $(ROOTDIR)/src exec
 
-# implicit rules
-%.o: %.c
-	$(CC) -c $(CFLAGS) -o $@ $<
-%: %.o
-	$(CXX) $(LDFLAGS) -o $@ $< $(LDLIBS)
+.PHONY: install-dir
+install-dir: clean-install
+	$(MKDIR) -p $(INSTALLDIR)
+	$(MAKE) -C $(CURDIR) DESTDIR=$(INSTALLDIR) install
+
+.PHONY: package
+package: install-dir
+	cd $(INSTALLDIR) && $(TAR) czf $(ROOTDIR)/gen/$(PKGNAME)-$(VERSION)-$(TARGET_ARCH_TYPE).tar.gz *
+
+.PHONY: install
+install: exec
+	$(INSTALL) -D -m 755 -t $(DESTDIR)$(bindir)/ $(ROOTDIR)/gen/exec/$(TARGET_ARCH_TYPE)/$(PKGNAME)
+	$(INSTALL) -d $(DESTDIR)$(datadir)/$(PKGNAME)
+	$(CHMOD) -R a+Xr,g-w,o-w $(DESTDIR)$(datadir)/$(PKGNAME)
+
+.PHONY: uninstall
+uninstall:
+	$(RM) $(DESTDIR)$(bindir)/$(PKGNAME)
+	$(RM) -r $(DESTDIR)$(datadir)/$(PKGNAME)
 
 .PHONY: clean
-clean:
-	-rm -f *.o
-	-rm -f scom
+clean: clean-exec clean-install
 
-.PHONY: cleanall
-cleanall: clean
+.PHONY: distclean
+distclean: distclean-exec distclean-install
+	$(RM) -r $(ROOTDIR)/gen
 
+.PHONY: mostlyclean
+mostlyclean: mostlyclean-exec mostlyclean-install
+
+.PHONY: clean-exec
+clean-exec:
+	$(MAKE) -C $(ROOTDIR)/src clean
+
+.PHONY: mostlyclean-exec
+mostlyclean-exec:
+	$(MAKE) -C $(ROOTDIR)/src mostlyclean
+
+.PHONY: distclean-exec
+distclean-exec:
+	$(MAKE) -C $(ROOTDIR)/src distclean
+
+.PHONY: clean-install
+clean-install: distclean-install
+
+.PHONY: mostlyclean-install
+mostlyclean-install: distclean-install
+
+.PHONY: distclean-install
+distclean-install:
+	$(RM) -r $(INSTALLDIR)
+
+.DEFAULT:
+	$(MAKE) -C $(ROOTDIR)/src $(MAKECMDGOALS)

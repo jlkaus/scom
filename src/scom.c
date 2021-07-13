@@ -10,9 +10,9 @@
 #include <termios.h> /* POSIX terminal control definitions */
 #include <argp.h>    /* arg_parse and co. */
 
-const char *argp_program_version = "scom 0.3";
-const char *argp_program_bug_address = "<jlkaus@gmail.com>";
-static char program_documentation[] = "scom - A very simple interface to communicate over serial lines.\
+const char *argp_program_version = PKGNAME " " VERSION;
+const char *argp_program_bug_address = PKGMAINT";
+static char program_documentation[] = PKGNAME " - A very simple interface to communicate over serial lines.\
 \vOnce started, commands are excepted at the terminal with a CMD: prompt.  Data read from the serial port \
 is displayed in READ: lines, and data sent over the serial port is displayed in WRITE: lines.  Supported commands are:\n\
 \txxxxxxxx...\t\tSend hex bytes\n\
